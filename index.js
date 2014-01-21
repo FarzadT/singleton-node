@@ -8,6 +8,7 @@ var Singleton = function(in_name, in_interval, in_redisConnection){
   this._key = SINGLTN + in_name;
   this._interval = in_interval;
   this._refresh = Math.floor(in_interval*0.9);
+  this._isMaster = false;
 
     // instance guid
   this._guid = 'xxxxxxxxxx'.replace(/x/g,function(){return Math.floor(Math.random()*16).toString(16)});
@@ -21,9 +22,9 @@ Singleton.prototype.start = function(masterCallback){
   // settimeout.
   this._masterCB = this._masterCB || masterCallback;
 
-  if(that._timeout){
-    clearTimeout(that._timeout);
-    that._timeout = null;
+  if(this._timeout){
+    clearTimeout(this._timeout);
+    this._timeout = null;
   }
 
   this._redisConnection.setnx([this._key, this._guid], function(error, success){
@@ -32,11 +33,12 @@ Singleton.prototype.start = function(masterCallback){
       that._timeout = setTimeout(that.start.bind(that),that._interval);
 
       if(!that._queued){
-        that._redisConnection.blpop(QUEUE, 0, that.start.bind(that));
+        that._redisConnection.blpop(QUEUE, 1, that.start.bind(that));
         that._queued = true;
       }
 
     } else if(success){
+      that._isMaster = true;
       // set the key expiration
       that._redisConnection.expire([that._key, Math.round(that._interval/1000)],function(){});
       that._refreshInterval = setInterval(
@@ -52,11 +54,16 @@ Singleton.prototype.start = function(masterCallback){
 };
 
 Singleton.prototype.stop = function(){
-  var that = this;
+  if(that._isMaster){
+    clearInterval(this._refreshInterval);
+    clearTimeout(this._timeout);
 
-  this._redisConnection.del([this._key], function(error){
-    that._redisConnection.rpush(QUEUE, that._guid);
-  });
+    var that = this;
+    this._redisConnection.del([this._key], function(error){
+      that._redisConnection.rpush(QUEUE, that._guid);
+    });
+    this._isMaster = false;
+  }
 };
 
 module.exports = Singleton;
