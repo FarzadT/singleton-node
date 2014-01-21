@@ -32,7 +32,7 @@ Singleton.prototype.start = function(masterCallback){
       that._timeout = setTimeout(that.start.bind(that),that._interval);
 
       if(!that._queued){
-        that._redisConnection.blpop([QUEUE], that.start.bind(that));
+        that._redisConnection.blpop(QUEUE, 0, that.start.bind(that));
         that._queued = true;
       }
 
