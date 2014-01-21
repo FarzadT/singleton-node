@@ -55,7 +55,7 @@ Singleton.prototype.stop = function(){
   var that = this;
 
   this._redisConnection.del([this._key], function(error){
-    that._redisConnection.rpush(QUEUE, this._guid);
+    that._redisConnection.rpush(QUEUE, that._guid);
   });
 };
 
