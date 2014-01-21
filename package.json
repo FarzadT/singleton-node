@@ -1,0 +1,14 @@
+{
+    "name": "singleton-node"
+  , "version": "0.0.1"
+  , "description": "Singleton feature"
+  , "keywords": ["singleton"]
+  , "repository" :
+    { "type" : "git"
+      , "url" : "https://github.com/FarzadT/singleton.git"
+    }
+  , "author": "Farzad Towhidi"
+  , "dependencies": {}
+  , "main": "index"
+  , "engines": { "node": ">= 0.6.0" }
+}
