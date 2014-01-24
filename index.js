@@ -54,7 +54,7 @@ Singleton.prototype.start = function(masterCallback){
 };
 
 Singleton.prototype.stop = function(){
-  if(that._isMaster){
+  if(this._isMaster){
     clearInterval(this._refreshInterval);
     clearTimeout(this._timeout);
 
