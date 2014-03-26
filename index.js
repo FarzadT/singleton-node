@@ -2,12 +2,14 @@
 var SINGLTN = "SINGLTN:";
 var QUEUE = "SINGLTN:QUEUE:";
 
-var Singleton = function(in_name, in_interval, in_redisConnection){
+var Singleton = function(in_name,
+                         in_interval,
+                         in_redisConnection){
 
   this._redisConnection = in_redisConnection;
   this._key = SINGLTN + in_name;
   this._interval = in_interval;
-  this._refresh = Math.floor(in_interval*0.9);
+  this._refresh = Math.floor(in_interval*0.5);
   this._isMaster = false;
 
     // instance guid
