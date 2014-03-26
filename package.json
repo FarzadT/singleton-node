@@ -8,7 +8,9 @@
       , "url" : "https://github.com/FarzadT/singleton.git"
     }
   , "author": "Farzad Towhidi"
-  , "dependencies": {}
+  , "dependencies": {
+    "redis": "~0.10.1"
+  }
   , "main": "index"
   , "engines": { "node": ">= 0.6.0" }
 }

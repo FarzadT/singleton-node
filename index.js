@@ -1,15 +1,25 @@
 
 var SINGLTN = "SINGLTN:";
 var QUEUE = "SINGLTN:QUEUE:";
+var redis = require('redis');
 
-var Singleton = function(in_name, in_interval, in_redisConnection){
+var Singleton = function(in_name,
+                         in_interval,
+                         in_redisConnection){
 
   this._redisConnection = in_redisConnection;
+
   this._key = SINGLTN + in_name;
+
+  // used to implement a "handoff" which should happen faster than the "interval"
+  this._queue = QUEUE + in_name;
+  this._queued = false;
+
   this._interval = in_interval;
-  this._refresh = Math.floor(in_interval*0.9);
+  this._refresh = Math.floor(in_interval*0.5);
   this._isMaster = false;
 
+  this._blpopConnection = null;
     // instance guid
   this._guid = 'xxxxxxxxxx'.replace(/x/g,function(){return Math.floor(Math.random()*16).toString(16)});
 };
@@ -33,7 +43,14 @@ Singleton.prototype.start = function(masterCallback){
       that._timeout = setTimeout(that.start.bind(that),that._interval);
 
       if(!that._queued){
-        that._redisConnection.blpop(QUEUE, 1, that.start.bind(that));
+        if (!that._blpopConnection){
+          that._blpopConnection = redis.createClient(that._redisConnection.port,that._redisConnection.host, that._redisConnection.options)
+        }
+
+        that._blpopConnection.blpop(that._queue, 0, function(err, res) {
+          that._queued = false;
+          that.start(that);
+        });
         that._queued = true;
       }
 
@@ -60,7 +77,7 @@ Singleton.prototype.stop = function(){
 
     var that = this;
     this._redisConnection.del([this._key], function(error){
-      that._redisConnection.rpush(QUEUE, that._guid);
+      that._redisConnection.rpush(that._queue, that._guid);
     });
     this._isMaster = false;
   }
